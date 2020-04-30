@@ -1,24 +1,27 @@
 # The start of my app.
-import os, time, datetime, calendar, sqlite3
-from dateutil import rrule
+import os
+import time
+import datetime
+import calendar
+import sqlite3
 import recurrent
+from dateutil import rrule
 
-dateToday = datetime.datetime.today()
-# r = recurrent.RecurringEvent(now_date=dateToday)
-# r = recurrent.RecurringEvent(now_date=datetime.datetime(2020,1,1))
-# r.parse('every other friday starting now until january 2050')
-# rr = rrule.rrulestr(r.get_RFC_rrule())
-# rr.after(datetime.datetime(2020,4,38)
-# cal = calendar.Calendar(firstweekday=6)
-
-
-defaultPath = os.path.join(os.path.dirname(__file__), 'finanCalc.db')
+defaultPath = os.path.join(os.path.dirname(__file__), 'main.db')
 def dbConnect(dbPath=defaultPath):
     con = sqlite3.connect(dbPath)
     return con
 
 con = dbConnect()
 cur = con.cursor()
+
+dateToday = datetime.datetime.today()
+# r = recurrent.RecurringEvent(now_date=dateToday)
+r = recurrent.RecurringEvent(now_date=datetime.datetime(2020,1,1))
+r.parse('every other friday starting now until january 2050')
+rr = rrule.rrulestr(r.get_RFC_rrule())
+rr.after(datetime.datetime(2020,4,28))
+# cal = calendar.Calendar(firstweekday=6)
 
 billsTableCreate = """
 CREATE TABLE IF NOT EXISTS bills (
@@ -96,16 +99,13 @@ Today's date is: {dateToday.date()}
 """)
         
 def viewAllEntries():
-    cur.execute("create table all_entries as select bill_name, actual_amount_due, due_date from bills union select user, income_amount, pay_day_start from income;")
-    con.commit()
+    cur.execute("create temp view if not exists all_entries as select bill_name, actual_amount_due, due_date from bills union select user, income_amount, pay_day_start from income;")
     cur.execute("select bill_name, actual_amount_due, date(due_date) from all_entries order by date(due_date);")
     formatted_result = [f"{bill_name:<20}{actual_amount_due:<14}{due_date:<15}" for bill_name, actual_amount_due, due_date in cur.fetchall()]
     bill_name, actual_amount_due, due_date = "Entry", "Amount", "Date"
     print("\n\nAll entries:\n")
     print('\n'.join([f"{bill_name:<20}{actual_amount_due:<14}{due_date:<15}"] + formatted_result))
     input("\n\nPress ENTER key to continue to main menu.")
-    cur.execute("drop table all_entries;")
-    con.commit()
 
 def viewYourBills():
     cur.execute("SELECT bill_name, base_amount_due, actual_amount_due, date(due_date) FROM bills ORDER BY DATE(due_date);")
