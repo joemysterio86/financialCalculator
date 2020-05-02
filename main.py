@@ -16,12 +16,23 @@ con = dbConnect()
 cur = con.cursor()
 
 dateToday = datetime.datetime.today()
-# r = recurrent.RecurringEvent(now_date=dateToday)
-r = recurrent.RecurringEvent(now_date=datetime.datetime(2020,1,1))
-r.parse('every other friday starting now until january 2050')
-rr = rrule.rrulestr(r.get_RFC_rrule())
-rr.after(datetime.datetime(2020,4,28))
+thisMonth = dateToday.replace(day=1,hour=0,minute=0,second=0,microsecond=0)
+rMonth = recurrent.RecurringEvent(now_date=datetime.datetime(2020,1,1))
+rMonth.parse('every first of the month starting january 2020 until january 2050')
+rrMonth = rrule.rrulestr(rMonth.get_RFC_rrule())
+rrMonth.after(dateToday)
+
+rF = recurrent.RecurringEvent(now_date=datetime.datetime(2020,5,1))
+rF.parse('every other friday starting may 1st 2020 until january 2040')
+rrF = rrule.rrulestr(rF.get_RFC_rrule())
+# rrF.after(datetime.datetime(2020,4,28))
 # cal = calendar.Calendar(firstweekday=6)
+
+def rFPayDays():
+    for x in rrF:
+        if thisMonth <= x <= rrMonth.after(thisMonth) - datetime.timedelta(days=1):
+            print(x)
+
 
 billsTableCreate = """
 CREATE TABLE IF NOT EXISTS bills (
@@ -41,8 +52,49 @@ CREATE TABLE IF NOT EXISTS income (
 	pay_day_frequency varchar(255) NOT NULL
 );"""
 
+monthTableCreate = """
+CREATE TABLE IF NOT EXISTS month (
+    id integer PRIMARY KEY,
+    month datetime NOT NULL
+);"""
+
 cur.execute(billsTableCreate)
 cur.execute(incomeTableCreate)
+cur.execute(monthTableCreate)
+
+
+def checkMonth():
+    cur.execute("SELECT * FROM month ORDER BY month DESC LIMIT 1;")
+    monthFetch = cur.fetchone()
+    if monthFetch == None:
+        cur.execute("insert into month (month) values ('2020,1,1');")
+        con.commit()
+    cur.execute("SELECT * FROM month ORDER BY month DESC LIMIT 1;")
+    monthFetch = cur.fetchone()[1]
+    if dateToday < rrMonth.after(dateToday):
+        if monthFetch == str(thisMonth):
+            print(f"Financial App!!\n\nWe are now in the month of {dateToday.strftime('%B').upper()}.\n")
+        else:
+            print("New month started! Initializing...")
+            cur.execute(f"insert into month (month) values(datetime('{dateToday}','start of month'));")
+            con.commit()
+            time.sleep(1)
+            print(f"Financial App!!\n\nWe are now in the month of {dateToday.strftime('%B').upper()}.\n")
+
+def nextBill():
+    # cur.execute("select bill_name, base_amount_due from bills where date(due_date) = (select min(date(due_date)) from bills where date(due_date) > date(\"2020-05-02\"));")
+    cur.execute("select bill_name, base_amount_due from bills where date(due_date) = (select min(date(due_date)) from bills where date(due_date) >= date(\"now\"));")
+    bill = cur.fetchone()
+    if bill:
+        print(f"""Today's date is: {dateToday.date()}
+Your next bill is {bill[0].upper()} for the amount of {bill[1]}.
+""")
+    else:
+        print(f"""Financial App!
+
+
+Today's date is: {dateToday.date()}
+""")
 
 def addBill():
     def insertBill(con, bill_name, base_amount_due, actual_amount_due, due_date):
@@ -79,24 +131,6 @@ def addIncome():
     insertIncome(con, income1, income2, income3b, income4)
     print("Income added!! Taking you back to main menu.")
     time.sleep(1.5)
-
-def nextBill():
-    # cur.execute("select bill_name, base_amount_due from bills where date(due_date) = (select min(date(due_date)) from bills where date(due_date) > date(\"2020-05-02\"));")
-    cur.execute("select bill_name, base_amount_due from bills where date(due_date) = (select min(date(due_date)) from bills where date(due_date) > date(\"now\"));")
-    bill = cur.fetchone()
-    if bill != None:
-        print(f"""Financial App!
-
-
-Today's date is: {dateToday.date()}
-Your next bill is {bill[0].upper()} for the amount of {bill[1]}.
-""")
-    else:
-        print(f"""Financial App!
-
-
-Today's date is: {dateToday.date()}
-""")
         
 def viewAllEntries():
     cur.execute("create temp view if not exists all_entries as select bill_name, actual_amount_due, due_date from bills union select user, income_amount, pay_day_start from income;")
@@ -123,8 +157,8 @@ def viewYourIncome():
     print('\n'.join([f"{user:<15}{income_amount:<16}{pay_day_start:<16}{pay_day_frequency:<15}"] + formatted_result))
     input("\n\nPress ENTER key to continue to main menu.")
 
-
 def menu():
+    checkMonth()
     nextBill()
     print(f"""What would you like to do?
 
@@ -164,3 +198,7 @@ def menu():
 
 
 menu()
+
+
+# cur.execute("select ((select sum(income_amount) from income) - (select sum(actual_amount_due) from bills where date(due_date) between '2020-05-01' and '2020-05-15'))")
+
