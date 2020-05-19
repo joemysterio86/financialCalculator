@@ -1,27 +1,19 @@
-
-import os, time, datetime, calendar, sqlite3
+from models import Income, last_of_month, this_month
+import os, time
 import sqlalchemy as db
-from sqlalchemy import cast, func, Column, Integer, String, DATETIME, REAL, or_
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import func
 from sqlalchemy.orm import session, sessionmaker
 from dateutil import rrule
 from dateutil.parser import parse
-from dateutil.relativedelta import relativedelta
-
-date_today = datetime.datetime.today()
-rr_month = rrule.rrulestr('DTSTART:20200101\nRRULE:BYMONTHDAY=1;INTERVAL=1;FREQ=MONTHLY;UNTIL=20500101')
-this_month = date_today.replace(day=1,hour=0,minute=0,second=0,microsecond=0)
-last_of_month = rr_month.after(this_month) - datetime.timedelta(days=1)
 
 db_path = os.path.join(os.getcwd(), 'main.db')
 db_uri = 'sqlite:///{}'.format(db_path)
 engine = db.create_engine(db_uri)
+metadata = db.MetaData()
 Session = sessionmaker(bind=engine)
 session = Session()
 
-
 def insert_income(*args):
-    from main import Income
     insert = Income(
         user=args[0],
         base_income_amount=args[1],
@@ -35,7 +27,6 @@ def insert_income(*args):
 # This function will take what's generated as "rr", an rrulestr, for the amount of times there's a pay date,
 # cycles through each date, and insert it in DB as income. Mainly for weekly/biweekly schedule.
 def rr_pay_days(*args):
-    from main import Income
     lam = str(last_of_month.date()).replace('-','')
     if args[3].lower() == "weekly":
         weekly = f"BYDAY=FR;INTERVAL=1;FREQ=WEEKLY;UNTIL={lam}"
@@ -48,7 +39,6 @@ def rr_pay_days(*args):
             insert_income(args[0], args[1], x.date(), args[3])
 
 def add_income():
-    from main import Income
     sched_options = ["weekly","biweekly","bimonthly","monthly"]
     while True:
         inc_belong = input("\nPlease enter who this income belongs to: ")
@@ -89,7 +79,6 @@ def add_income():
     time.sleep(1)
 
 def update_income():
-    from main import Income
     while True:
         vyi = session.query(Income.id, Income.user, Income.base_income_amount, Income.actual_income_amount, func.date(Income.pay_day), Income.pay_day_frequency).filter(Income.pay_day.between(this_month.date(),last_of_month.date())).order_by(Income.pay_day)
         formatted_result = [f"{id:<6}{user:<15}{base_income_amount:<12}{actual_income_amount:<16}{pay_day:<16}{pay_day_frequency:<15}" for id, user, base_income_amount, actual_income_amount, pay_day, pay_day_frequency in vyi]
@@ -111,7 +100,6 @@ def update_income():
             time.sleep(0.5)
 
 def income_questions():
-    from main import Income
     while True:
         vyi = session.query(Income.user, Income.actual_income_amount, func.date(Income.pay_day), Income.pay_day_frequency).filter(Income.pay_day.between(this_month.date(),last_of_month.date())).order_by(Income.pay_day)
         formatted_result = [f"{user:<15}{actual_income_amount:<16}{pay_day:<16}{pay_day_frequency:<15}" for user, actual_income_amount, pay_day, pay_day_frequency in vyi]
