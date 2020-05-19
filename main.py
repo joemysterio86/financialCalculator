@@ -56,9 +56,9 @@ class Month(Base):
     def __repr__(self):
         return f'Bank Name: {self.bank}'
 
+Base.metadata.create_all(engine)
 engine.execute("CREATE VIEW IF NOT EXISTS all_entries as SELECT bill_name, actual_amount_due, due_date FROM bills union SELECT user, actual_income_amount, pay_day FROM income;")
 all_entries = db.Table('all_entries', metadata, autoload=True, autoload_with=engine)
-Base.metadata.create_all(engine)
 
 # self explanatory
 date_today = datetime.datetime.today()
