@@ -1,0 +1,4 @@
+myvenv
+__pycache__
+main.db
+import os.py
