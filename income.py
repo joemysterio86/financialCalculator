@@ -228,11 +228,14 @@ Income Menu:
     1) Add Income.
     2) Update Income.
     3) Delete Income.
+    Q) Return to Main Menu.
 
 
-Please select an option or hit ENTER to return to Main Menu: """)
+Please select an option: """)
 
         if inc_choices == "":
+            continue
+        elif inc_choices.lower() == "q":
             return
         elif inc_choices == "1":
             add_income_menu()

@@ -4,6 +4,8 @@ import sqlalchemy as db
 from sqlalchemy import func
 from sqlalchemy.orm import session, sessionmaker
 from dateutil.parser import parse
+from dateutil.relativedelta import relativedelta
+
 
 engine = db.create_engine(db_uri)
 metadata = db.MetaData()
@@ -12,9 +14,9 @@ session = Session()
 
 # next_bill is to show you today's date along with what is and how much your next bill will be.
 def next_bill():
-    bill = session.query(Bills.bill_name, Bills.base_amount_due).filter(Bills.due_date >= date_today).first()
+    bill = session.query(Bills.bill_name, Bills.base_amount_due, Bills.due_date).filter(Bills.due_date >= date_today - relativedelta(days=+1)).order_by(Bills.due_date).first()
     if bill:
-        print(f"Today's date is: {date_today.date()}\nYour next bill is {bill[0].upper()} for the amount of {bill[1]}.\n")
+        print(f"Today's date is: {date_today.date()}\nYour next bill is {bill[0].upper()} for the amount of {bill[1]} on {bill[2].date()}.\n")
     else:
         print(f"Today's date is: {date_today.date()}\nYou don't have a bill due! Please check your finances.\n")
 
@@ -194,11 +196,14 @@ Bills Menu:
     1) Add Bills.
     2) Update Bills.
     3) Delete Bills.
+    Q) Return to Main Menu.
 
 
-Please select an option or hit ENTER to return to Main Menu: """)
+Please select an option: """)
 
         if bill_choices == "":
+            continue
+        elif bill_choices.lower() == "q":
             return
         elif bill_choices == "1":
             add_bills_menu()

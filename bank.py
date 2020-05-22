@@ -158,24 +158,27 @@ def bank_questions():
         print("\n\nYour Bank(s):\n")
         print('\n'.join([f"{bank_name:<20}{checkings_total:<16}{savings_total:<16}"] + formatted_result))
 
-        inc_choices = input("""
+        ban_choices = input("""
 
 Bank Menu:
 
     1) Add Bank.
     2) Update Bank.
     3) Delete Bank.
+    Q) Return to Main Menu.
 
 
-Please select an option or hit ENTER to return to Main Menu: """)
+Please select an option: """)
 
-        if inc_choices == "":
+        if ban_choices == "":
+            continue
+        elif ban_choices.lower() == "q":
             return
-        elif inc_choices == "1":
+        elif ban_choices == "1":
             add_bank_menu()
-        elif inc_choices == "2":
+        elif ban_choices == "2":
             update_bank_menu()
-        elif inc_choices == "3":
+        elif ban_choices == "3":
             delete_bank_menu()
         else:
             print("Please hit ENTER to return to main menu, or select one of other options!")
