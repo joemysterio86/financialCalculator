@@ -3,9 +3,11 @@ from dateutil import rrule
 import sqlalchemy as db
 from sqlalchemy import Column, Integer, String, DATETIME, REAL
 from sqlalchemy.ext.declarative import declarative_base
+from dateutil.relativedelta import relativedelta
 
 date_today = datetime.datetime.today()
 this_month = date_today.replace(day=1,hour=0,minute=0,second=0,microsecond=0)
+next_month = this_month + relativedelta(months=+1)
 rr_month = rrule.rrulestr('DTSTART:20200101\nRRULE:BYMONTHDAY=1;INTERVAL=1;FREQ=MONTHLY;UNTIL=20500101')
 last_of_month = rr_month.after(this_month) - datetime.timedelta(days=1)
 
@@ -39,17 +41,18 @@ class Bills(Base):
 class Bank(Base):
     __tablename__ = 'bank'
     id = Column(Integer, primary_key=True)
-    bank = Column(String)
-    total = Column(REAL)
+    bank_name = Column(String)
+    checkings_total = Column(REAL)
+    savings_total = Column(REAL)
     def __repr__(self):
-        return f'ID: {self.id}, Bank Name: {self.bank}, Bank Total: {self.total}'
+        return f'ID: {self.id}, Bank Name: {self.bank_name}, Checkings Total: {self.checkings_total}, Savings Total: {self.savings_total}'
 
 class Month(Base):
     __tablename__ = 'month'
     id = Column(Integer, primary_key=True)
-    month = Column(String)
+    month_name = Column(String)
     def __repr__(self):
-        return f'ID: {self.id}, Month: {self.bank}'
+        return f'ID: {self.id}, Month: {self.month_name}'
 
 Base.metadata.create_all(engine)
 
