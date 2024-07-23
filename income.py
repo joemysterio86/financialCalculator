@@ -20,15 +20,12 @@ def add_income(*args):
         pay_day_frequency=args[3]
         )
     session.add(add)
-    session.commit()
 
 def update_income(id, col, val):
     session.query(Income).filter(Income.id == id).update({col: val})
-    session.commit()
 
 def delete_income(id):
     session.query(Income).filter(Income.id == id).delete()
-    session.commit()
 
 # This function will take what's generated as "rr", an rrulestr, for the amount of times there's a pay date,
 # cycles through each date, and insert it in DB as income. Mainly for weekly/biweekly schedule.
@@ -94,6 +91,7 @@ def add_income_menu():
         add_income(inc_belong, inc_amount, parse(inc_date1), inc_sched)
     else:
         rr_pay_days(inc_belong, inc_amount, rrule_date, inc_sched)
+    session.commit()
     print("Income added for entire month! Taking you back to Income Menu.\n")
     time.sleep(1)
 
@@ -114,7 +112,7 @@ def update_income_menu():
                 return
             elif inc_update_choice in str(id_list):
                 while True:
-                    vyi = session.query(Income.id, Income.user, Income.base_income_amount, Income.actual_income_amount, func.date(Income.pay_day), Income.pay_day_frequency).filter(Income.pay_day.between(this_month.date(),next_month.date())).filter(Income.id == int(inc_update_choice))
+                    vyi = session.query(Income.id, Income.user, Income.base_income_amount, Income.actual_income_amount, func.date(Income.pay_day), Income.pay_day_frequency).filter(Income.pay_day.between(this_month.date(),next_month.date())).filter(Income.id == float(inc_update_choice))
                     formatted_result = [f"{id:<6}{user:<15}{base_income_amount:<12}{actual_income_amount:<16}{pay_day:<16}{pay_day_frequency:<15}" for id, user, base_income_amount, actual_income_amount, pay_day, pay_day_frequency in vyi]
                     id, user, base_income_amount, actual_income_amount, pay_day, pay_day_frequency = "ID#", "User", "Base Pay", "Pay Day Amount", "Pay Day", "Pay Day Frequency"
                     print("\n\nYour Income:\n")
@@ -142,7 +140,8 @@ Please select an option: """)
                             elif inc_upd == "q":
                                 break
                             else:
-                                update_income(int(inc_update_choice), "base_income_amount", inc_upd)
+                                update_income(float(inc_update_choice), "base_income_amount", inc_upd)
+                                session.commit()
                                 print("Updated!!")
                                 time.sleep(0.5)
                                 break
@@ -154,7 +153,8 @@ Please select an option: """)
                             elif inc_upd == "q":
                                 break
                             else:
-                                update_income(int(inc_update_choice), "actual_income_amount", inc_upd)
+                                update_income(float(inc_update_choice), "actual_income_amount", inc_upd)
+                                session.commit()
                                 print("Entry has been update.")
                                 time.sleep(0.5)
                                 break
@@ -166,7 +166,8 @@ Please select an option: """)
                             elif inc_upd == "q":
                                 break
                             else:
-                                update_income(int(inc_update_choice), "pay_day", parse(inc_upd))
+                                update_income(float(inc_update_choice), "pay_day", parse(inc_upd))
+                                session.commit()
                                 print("Entry has been update.")
                                 time.sleep(0.5)
                                 break
@@ -179,7 +180,8 @@ Please select an option: """)
                             elif inc_upd == "q":
                                 break
                             else:
-                                update_income(int(inc_update_choice), "pay_day_frequency", inc_upd)
+                                update_income(float(inc_update_choice), "pay_day_frequency", inc_upd)
+                                session.commit()
                                 print("Entry has been update.")
                                 time.sleep(0.5)
                                 break
@@ -207,6 +209,7 @@ def delete_income_menu():
                 return
             elif inc_delete_choice in str(id_list):
                 delete_income(inc_delete_choice)
+                session.commit()
                 print("Entry has been removed.")
                 time.sleep(0.5)
                 break

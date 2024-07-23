@@ -22,8 +22,8 @@ def check_month():
     if monthFetch.first() == None:
         m = Month(month_name=datetime.datetime(2020,1,1))
         session.add(m)
-        session.commit()
-    
+    session.commit()
+
     # checks the current month, if not, sets up a new month to be current, resets bills back to original amount due, and updates income to new/current month.
     monthFetch = session.query(Month.month_name).order_by(db.desc(Month.month_name)).limit(1)
     if monthFetch.first()[0] == str(this_month):
@@ -32,7 +32,6 @@ def check_month():
         print("New month started! Initializing...\n\n\n")
         m = Month(month_name=this_month)
         session.add(m)
-        session.commit()
         
         # loops through all entries and sets the actual amount due back to the base amount, and increases the due date to the current month.
         for id, base_amount_due, due_date in session.query(Bills.id, Bills.base_amount_due, Bills.due_date):
@@ -62,28 +61,25 @@ def check_month():
 
 # view_all_entries allows you to view all of your bills and income together in order of due date and pay date, totals each, and shows you remaining money at the end of the month.
 def view_all_entries():
-
     vae = engine.execute(f"SELECT bill_name, actual_amount_due, date(due_date) FROM all_entries WHERE date(due_date) between '{this_month.date()}' and '{last_of_month.date()}' ORDER BY DATE(due_date);")
-    formatted_result = [f"{bill_name:<20}{actual_amount_due:<14}{due_date:<15}" for bill_name, actual_amount_due, due_date in vae]
-    bill_name, actual_amount_due, due_date = "Entry", "Amount", "Date"
-    print("\n\nAll entries:\n")
-    print('\n'.join([f"{bill_name:<20}{actual_amount_due:<14}{due_date:<15}"] + formatted_result))
-    total_checkings = session.query(func.sum(Bank.checkings_total)).first()[0]
-    total_savings = session.query(func.sum(Bank.savings_total)).first()[0]
-    total_income = session.query(func.sum(Income.actual_income_amount)).filter(Income.pay_day.between(this_month.date(),next_month.date())).first()[0]
-    total_bills = session.query(func.sum(Bills.actual_amount_due)).filter(Bills.due_date.between(this_month.date(),next_month.date())).first()[0]
-    if total_income and total_bills == None:
-        print(f"""
-The total in your Checkings Account is: {total_checkings}
-The total in your Savings Account is: {total_savings}""")
-    elif total_income and total_bills and total_checkings and total_savings!= None:
-        print(f"""
-The total in your Checkings Account is: {total_checkings}
-The total in your Savings Account is: {total_savings} 
-The total income for this month is: {total_income}
-The total bills for this month is: {total_bills}
-
-You will have this much left over at the end of this month (Checkings): {total_checkings + total_income - total_bills}""") 
-    else:
-        pass
-    input("\n\nPress ENTER key to continue to main menu.")
+    formatted_result = [f'{bill_name:<20}{actual_amount_due:<14}{due_date:<15}' for bill_name, actual_amount_due, due_date in vae]
+    bill_name, actual_amount_due, due_date = 'Entry', 'Amount', 'Date'
+    print('\n\nAll entries:\n')
+    print('\n'.join([f'{bill_name:<20}{actual_amount_due:<14}{due_date:<15}'] + formatted_result))
+    print('\n\n')
+    checkings_total_view = session.query(func.sum(Bank.checkings_total)).first()[0]
+    savings_total_view = session.query(func.sum(Bank.savings_total)).first()[0]
+    income_total_view = session.query(func.sum(Income.actual_income_amount)).filter(Income.pay_day.between(this_month.date(),next_month.date())).first()[0]
+    bills_total_view = session.query(func.sum(Bills.actual_amount_due)).filter(Bills.due_date.between(this_month.date(),next_month.date())).first()[0]
+    
+    if income_total_view != None:
+        print(f'The total income for this month is: {round(income_total_view, 2)}')
+    if bills_total_view != None:
+        print(f'The total bills for this month is: {bills_total_view}')
+    if checkings_total_view != None:
+        print(f'The total in your Checkings Account is: {checkings_total_view}')
+    if savings_total_view != None:
+        print(f'The total in your Savings Account is: {savings_total_view}')
+    if checkings_total_view and income_total_view and bills_total_view != None:
+        print(f'You will have this much left over at the end of this month (Checkings): {checkings_total_view + income_total_view - bills_total_view}') 
+    input('\n\nPress ENTER key to continue to main menu.')

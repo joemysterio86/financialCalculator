@@ -5,11 +5,13 @@ from sqlalchemy import Column, Integer, String, DATETIME, REAL
 from sqlalchemy.ext.declarative import declarative_base
 from dateutil.relativedelta import relativedelta
 
+# date_today = datetime.datetime(2022, 7, 1, 0, 0)
 date_today = datetime.datetime.today()
 this_month = date_today.replace(day=1,hour=0,minute=0,second=0,microsecond=0)
 next_month = this_month + relativedelta(months=+1)
-rr_month = rrule.rrulestr('DTSTART:20200101\nRRULE:BYMONTHDAY=1;INTERVAL=1;FREQ=MONTHLY;UNTIL=20500101')
-last_of_month = rr_month.after(this_month) - datetime.timedelta(days=1)
+# rr_month = rrule.rrulestr('DTSTART:20200101\nRRULE:BYMONTHDAY=1;INTERVAL=1;FREQ=MONTHLY;UNTIL=20500101')
+# last_of_month = rr_month.after(this_month) - datetime.timedelta(days=1)
+last_of_month = next_month - datetime.timedelta(days=1)
 
 db_path = os.path.join(os.getcwd(), 'main.db')
 db_uri = 'sqlite:///{}'.format(db_path)

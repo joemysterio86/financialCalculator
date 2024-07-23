@@ -20,15 +20,12 @@ def add_bank(*args):
         savings_total=args[2],
         )
     session.add(add)
-    session.commit()
 
 def update_bank(id, col, val):
     session.query(Bank).filter(Bank.id == id).update({col: val})
-    session.commit()
 
 def delete_bank(id):
     session.query(Bank).filter(Bank.id == id).delete()
-    session.commit()
 
 
 def add_bank_menu():
@@ -57,7 +54,8 @@ def add_bank_menu():
             return
         else:
             break
-    add_bank(bank1, int(bank2), int(bank3))
+    add_bank(bank1, float(bank2), float(bank3))
+    session.commit()
     print("Bank info has been added. Taking you back to Bank Menu.\n")
     time.sleep(1)
 
@@ -78,7 +76,7 @@ def update_bank_menu():
                 return
             elif bank_update_choice in str(id_list):
                 while True:
-                    vybank = session.query(Bank.id, Bank.bank_name, Bank.checkings_total, Bank.savings_total).order_by(Bank.bank_name).filter(Bank.id == int(bank_update_choice))
+                    vybank = session.query(Bank.id, Bank.bank_name, Bank.checkings_total, Bank.savings_total).order_by(Bank.bank_name).filter(Bank.id == float(bank_update_choice))
                     formatted_result = [f"{id:<6}{bank_name:<20}{checkings_total:<16}{savings_total:<16}" for id, bank_name, checkings_total, savings_total in vybank]
                     id, bank_name, checkings_total, savings_total = "ID#", "Bank Name", "Checkings Total", "Savings Total"
                     print("\n\nYour Bank(s):\n")
@@ -104,7 +102,8 @@ Please select an option: """)
                             elif bank_upd == "q":
                                 break
                             else:
-                                update_bank(int(bank_update_choice), "checkings_total", bank_upd)
+                                update_bank(float(bank_update_choice), "checkings_total", bank_upd)
+                                session.commit()
                                 print("Updated!!")
                                 time.sleep(0.5)
                                 break
@@ -116,8 +115,9 @@ Please select an option: """)
                             elif bank_upd == "q":
                                 break
                             else:
-                                update_bank(int(bank_update_choice), "savings_total", bank_upd)
-                                print("Entry has been update.")
+                                update_bank(float(bank_update_choice), "savings_total", bank_upd)
+                                session.commit()
+                                print("Entry has been updated.")
                                 time.sleep(0.5)
                                 break
                     else:
@@ -137,13 +137,14 @@ def delete_bank_menu():
 
         id_list = [id for (id,) in session.query(Bank.id).order_by(Bank.id)]
         while True:
-            ban_delete_choice = input("\n\nPlease enter an ID to delete, or Q to return to previous menu: ")
-            if ban_delete_choice.lower() == "":
+            bank_delete_choice = input("\n\nPlease enter an ID to delete, or Q to return to previous menu: ")
+            if bank_delete_choice.lower() == "":
                 break
-            elif ban_delete_choice.lower() == "q":
+            elif bank_delete_choice.lower() == "q":
                 return
-            elif ban_delete_choice in str(id_list):
-                delete_bank(ban_delete_choice)
+            elif bank_delete_choice in str(id_list):
+                delete_bank(bank_delete_choice)
+                session.commit()
                 print("Entry has been removed.")
                 time.sleep(0.5)
                 break

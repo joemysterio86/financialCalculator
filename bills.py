@@ -95,7 +95,7 @@ def update_bills_menu():
                 return
             elif bill_update_choice in str(id_list):
                 while True:
-                    vyb = session.query(Bills.id, Bills.bill_name, Bills.base_amount_due, Bills.actual_amount_due, func.date(Bills.due_date)).filter(Bills.due_date.between(this_month.date(),next_month.date())).filter(Bills.id == int(bill_update_choice))
+                    vyb = session.query(Bills.id, Bills.bill_name, Bills.base_amount_due, Bills.actual_amount_due, func.date(Bills.due_date)).filter(Bills.due_date.between(this_month.date(),next_month.date())).filter(Bills.id == float(bill_update_choice))
                     formatted_result = [f"{id:<6}{bill_name:<20}{base_amount_due:<14}{actual_amount_due:<14}{due_date:<15}" for id, bill_name, base_amount_due, actual_amount_due, due_date in vyb]
                     id, bill_name, base_amount_due, actual_amount_due, due_date = "ID#", "Bill", "Monthly Due", "Current Due", "Due Date"
                     print("\n\nYour Bills:\n")
@@ -122,7 +122,7 @@ Please select an option: """)
                             elif bill_upd == "q":
                                 break
                             else:
-                                update_bills(int(bill_update_choice), "base_amount_due", bill_upd)
+                                update_bills(float(bill_update_choice), "base_amount_due", bill_upd)
                                 print("Updated!!")
                                 time.sleep(0.5)
                                 break
@@ -134,7 +134,7 @@ Please select an option: """)
                             elif bill_upd == "q":
                                 break
                             else:
-                                update_bills(int(bill_update_choice), "actual_amount_due", bill_upd)
+                                update_bills(float(bill_update_choice), "actual_amount_due", bill_upd)
                                 print("Entry has been update.")
                                 time.sleep(0.5)
                                 break
@@ -146,7 +146,7 @@ Please select an option: """)
                             elif bill_upd == "q":
                                 break
                             else:
-                                update_bills(int(bill_update_choice), "due_date", parse(bill_upd))
+                                update_bills(float(bill_update_choice), "due_date", parse(bill_upd))
                                 print("Entry has been update.")
                                 time.sleep(0.5)
                                 break
